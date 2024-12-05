@@ -27,15 +27,25 @@ namespace NZWalks.API.Repositories
             {
                 return null;
             }
-
             nZWalksDbContext.Walks.Remove(existingWalks);
             await nZWalksDbContext.SaveChangesAsync();
             return existingWalks;
         }
 
-        public async Task<List<Walk>> GetAllAsync()
+        public async Task<List<Walk>> GetAllAsync(string? filterOn = null, string? filterQuery = null)
         {
-            return await nZWalksDbContext.Walks.Include("Difficulty").Include("Region").ToListAsync();
+            var walks = nZWalksDbContext.Walks.Include("Difficulty").Include("Region").AsQueryable();
+
+            if (string.IsNullOrEmpty(filterOn) == false && string.IsNullOrEmpty(filterQuery) == false)
+            {
+                if (filterOn.Equals("Name", StringComparison.OrdinalIgnoreCase))
+                {
+                    walks = walks.Where(x => x.Name == filterQuery);
+                }
+            }
+
+            return await walks.ToListAsync();
+            //return await nZWalksDbContext.Walks.Include("Difficulty").Include("Region").ToListAsync();
         }
 
         public async Task<Walk?> GetByIdAsync(Guid id)
